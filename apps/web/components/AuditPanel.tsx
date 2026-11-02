@@ -17,6 +17,8 @@ function describe(event: AuditEvent, members: Member[]) {
     case 'workspace.created': return 'đã tạo không gian';
     case 'workspace.updated': return 'đã sửa thông tin không gian';
     case 'invitation.created': return `đã mời ${text(details.email)} làm ${role(details.role)}`;
+    case 'invitation.email_sent': return `đã gửi email mời đến ${text(details.email)}`;
+    case 'invitation.email_failed': return `không gửi được email mời đến ${text(details.email)}`;
     case 'invitation.accepted': return `đã tham gia với vai trò ${role(details.role)}`;
     case 'invitation.revoked': return `đã thu hồi lời mời của ${text(details.email)}`;
     case 'member.role_changed': return `đã đổi vai trò của ${target} từ ${role(details.from)} sang ${role(details.to)}`;

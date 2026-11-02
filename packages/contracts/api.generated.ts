@@ -683,7 +683,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Token returned once only; share manually. Seven day expiration. */
+            /** @description Token returned once only. Sent by email when SMTP is configured; emailDelivery reports the result. Seven day expiration. */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -691,6 +691,8 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Invitation"] & {
                         inviteToken: string;
+                        /** @enum {string} */
+                        emailDelivery: "SENT" | "FAILED" | "DISABLED";
                     };
                 };
             };

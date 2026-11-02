@@ -106,7 +106,10 @@ test('interface keeps users oriented: joining, stale edits, confirmation, theme 
   await guest.getByRole('textbox', { name: 'Mã mời', exact: true }).fill('ma-sai');
   await guest.getByRole('button', { name: 'Tham gia', exact: true }).click();
   await expect(guest.locator('#token-error')).toBeVisible();
-  await guest.getByRole('textbox', { name: 'Mã mời', exact: true }).fill(inviteToken);
+  await guest.goto(`/#invite=${inviteToken}`);
+  await guest.reload();
+  await expect(guest.getByRole('textbox', { name: 'Mã mời', exact: true })).toHaveValue(inviteToken);
+  expect(guest.url()).not.toContain('invite');
   await guest.getByRole('button', { name: 'Tham gia', exact: true }).click();
   await expect(guest.locator('.crumbs')).toContainText(`Đội Đổi mới ${id}`);
 

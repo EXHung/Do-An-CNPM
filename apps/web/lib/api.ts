@@ -7,6 +7,7 @@ export type Member = components['schemas']['Member'];
 export type Invitation = components['schemas']['Invitation'];
 export type Identity = components['schemas']['Identity'];
 export type AuditEvent = components['schemas']['AuditEvent'];
+export type EmailDelivery = 'SENT' | 'FAILED' | 'DISABLED';
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 

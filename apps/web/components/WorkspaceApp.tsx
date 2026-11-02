@@ -33,6 +33,15 @@ export function WorkspaceApp({ identity, onSignedOut, onExpired, dark, onTheme }
     setSelected(current => items.some(w => w.id === current) ? current : items[0]?.id ?? '');
   }, []);
   useEffect(() => { reload().catch(fail).finally(() => setLoading(false)); }, [reload, fail]);
+  useEffect(() => {
+    const invite = window.location.hash.match(/^#invite=([a-f0-9]{64})$/);
+    if (!invite) return;
+    // Clear the token from the address bar and history once it is in the form.
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    setToken(invite[1]);
+    report({ notice: 'Đã điền mã mời. Bấm Tham gia để vào không gian.' });
+    document.getElementById('invitation-token')?.scrollIntoView({ block: 'center' });
+  }, [report]);
   async function createWorkspace(event: FormEvent) {
     event.preventDefault(); setPending(true); report({});
     try {

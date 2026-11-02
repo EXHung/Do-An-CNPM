@@ -222,16 +222,17 @@ paths:
                 role: { $ref: '#/components/schemas/AssignableRole' }
       responses:
         '201':
-          description: Token returned once only; share manually. Seven day expiration.
+          description: Token returned once only. Sent by email when SMTP is configured; emailDelivery reports the result. Seven day expiration.
           content:
             application/json:
               schema:
                 allOf:
                   - { $ref: '#/components/schemas/Invitation' }
                   - type: object
-                    required: [inviteToken]
+                    required: [inviteToken, emailDelivery]
                     properties:
                       inviteToken: { type: string, pattern: '^[a-f0-9]{64}$' }
+                      emailDelivery: { type: string, enum: [SENT, FAILED, DISABLED] }
         '403': { $ref: '#/components/responses/Error' }
         '409': { $ref: '#/components/responses/Error' }
   /workspaces/{workspaceId}/invitations/{invitationId}:

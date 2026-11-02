@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { ArrowRight, Eye, EyeOff, Orbit, ShieldCheck, Users } from 'lucide-react';
 import { api, Identity, message } from '../lib/api';
 import { Notice, ThemeButton } from './ui';
@@ -14,6 +14,9 @@ export function AuthScreen({ onSignedIn, initialError, dark, onTheme }: { onSign
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(initialError);
   const [notice, setNotice] = useState('');
+  useEffect(() => {
+    if (window.location.hash.startsWith('#invite=')) setNotice('Hãy đăng nhập hoặc đăng ký bằng email nhận lời mời để tham gia.');
+  }, []);
   async function submit(event: FormEvent) {
     event.preventDefault(); setPending(true); setError(''); setNotice('');
     try {

@@ -3,15 +3,20 @@ import { Prisma, WorkspaceRole } from '@prisma/client';
 import { createHash, randomBytes } from 'node:crypto';
 import type { AuthUser } from '../auth/auth.types';
 import { PrismaService } from '../database/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { requireAssignableRole, requireManageableMember, requireWorkspaceAdmin } from './workspace.policy';
 
 type Tx = Prisma.TransactionClient;
 const userFields = { id: true, email: true, displayName: true } as const;
+const roleLabels: Record<WorkspaceRole, string> = { OWNER: 'Chủ sở hữu', ADMIN: 'Quản trị viên', MANAGER: 'Quản lý', MEMBER: 'Thành viên', VIEWER: 'Người xem' };
 const invitationFields = { id: true, email: true, role: true, expiresAt: true, acceptedAt: true, createdAt: true } as const;
 
 @Injectable()
 export class WorkspacesService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(MailService) private readonly mail: MailService,
+  ) {}
 
   private async member(db: Tx, workspaceId: string, userId: string) {
     const member = await db.workspaceMember.findUnique({ where: { workspaceId_userId: { workspaceId, userId } } });
@@ -100,7 +105,7 @@ export class WorkspacesService {
   }
 
   async invite(user: AuthUser, workspaceId: string, input: { email: string; role: WorkspaceRole }) {
-    return this.prisma.$transaction(async db => {
+    const { invitation, inviteToken, workspaceName } = await this.prisma.$transaction(async db => {
       await this.lock(db, workspaceId);
       const actor = await this.member(db, workspaceId, user.id);
       requireAssignableRole(actor.role, input.role);
@@ -120,8 +125,18 @@ export class WorkspacesService {
       });
       // The secret is deliberately absent from both audit and outbox.
       await this.record(db, workspaceId, user.id, 'invitation.created', invitation.id, { email: input.email, role: input.role });
-      return { ...invitation, inviteToken };
+      const workspace = await db.workspace.findUniqueOrThrow({ where: { id: workspaceId }, select: { name: true } });
+      return { invitation, inviteToken, workspaceName: workspace.name };
     });
+    // Sent after commit so the workspace lock is never held across a network call,
+    // and from memory so the token stays out of the database, audit and outbox.
+    const emailDelivery = await this.mail.sendInvitation({
+      to: input.email, token: inviteToken, workspaceName, inviterName: user.displayName, roleName: roleLabels[input.role], expiresAt: invitation.expiresAt,
+    });
+    if (emailDelivery !== 'DISABLED') {
+      await this.prisma.$transaction(db => this.record(db, workspaceId, user.id, emailDelivery === 'SENT' ? 'invitation.email_sent' : 'invitation.email_failed', invitation.id, { email: input.email }));
+    }
+    return { ...invitation, inviteToken, emailDelivery };
   }
 
   async accept(user: AuthUser, token: string) {

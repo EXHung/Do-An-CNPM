@@ -213,6 +213,46 @@ test('SP1 integration against isolated real PostgreSQL', { timeout: 240000 }, as
       assert.equal((await request('/auth/logout', 'POST', undefined, owner.cookie)).status, 200);
       assert.equal((await request('/me', 'GET', undefined, owner.cookie)).status, 401);
     });
+    await t.test('invitation email goes through SMTP and failures are reported, not hidden', async () => {
+      const { SMTPServer } = require('smtp-server');
+      const ownerCookie = (await request('/auth/login', 'POST', { email: owner.email, password })).cookie;
+      const messages = [];
+      const smtp = new SMTPServer({
+        authOptional: false, allowInsecureAuth: true, disabledCommands: ['STARTTLS'], logger: false,
+        onAuth(auth, session, done) { done(auth.username === 'orbit@example.test' && auth.password === 'app-password' ? null : new Error('Bad credentials'), { user: auth.username }); },
+        onData(stream, session, done) {
+          let raw = '';
+          stream.setEncoding('utf8');
+          stream.on('data', chunk => { raw += chunk; });
+          stream.on('end', () => { messages.push({ from: session.envelope.mailFrom.address, to: session.envelope.rcptTo.map(item => item.address), raw }); done(); });
+        },
+      });
+      await new Promise(resolve => smtp.listen(0, '127.0.0.1', resolve));
+      Object.assign(process.env, { SMTP_HOST: '127.0.0.1', SMTP_PORT: String(smtp.server.address().port), SMTP_USER: 'orbit@example.test', SMTP_PASS: 'app-password' });
+      try {
+        const sent = await request(`/workspaces/${workspace.id}/invitations`, 'POST', { email: 'mail-ok@example.test', role: 'VIEWER' }, ownerCookie);
+        assert.equal(sent.status, 201); assert.equal(sent.body.emailDelivery, 'SENT');
+        assert.equal(messages.length, 1);
+        assert.equal(messages[0].from, 'orbit@example.test');
+        assert.deepEqual(messages[0].to, ['mail-ok@example.test']);
+        const decoded = [messages[0].raw.replace(/=\r?\n/g, ''), ...messages[0].raw.split(/\r?\n\r?\n/).map(block => block.replace(/\s/g, '')).filter(block => /^[A-Za-z0-9+/=]+$/.test(block)).map(block => Buffer.from(block, 'base64').toString('utf8'))].join('\n');
+        assert.match(decoded, new RegExp(`localhost:3000/#invite=(3D)?${sent.body.inviteToken}`));
+        process.env.SMTP_PASS = 'wrong-password';
+        const failed = await request(`/workspaces/${workspace.id}/invitations`, 'POST', { email: 'mail-fail@example.test', role: 'VIEWER' }, ownerCookie);
+        assert.equal(failed.status, 201); assert.equal(failed.body.emailDelivery, 'FAILED'); assert.ok(failed.body.inviteToken);
+        assert.equal(messages.length, 1);
+        const events = await db.auditLog.findMany({ where: { entityId: { in: [sent.body.id, failed.body.id] } } });
+        assert.ok(events.some(event => event.entityId === sent.body.id && event.action === 'invitation.email_sent'));
+        assert.ok(events.some(event => event.entityId === failed.body.id && event.action === 'invitation.email_failed'));
+        assert.ok(!JSON.stringify(events).includes(sent.body.inviteToken));
+        const outbox = await db.outboxEvent.findMany({ where: { workspaceId: workspace.id } });
+        assert.ok(!JSON.stringify(outbox).includes(sent.body.inviteToken));
+        await db.invitation.deleteMany({ where: { id: { in: [sent.body.id, failed.body.id] } } });
+      } finally {
+        for (const name of ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS']) delete process.env[name];
+        await new Promise(resolve => smtp.close(resolve));
+      }
+    });
     await t.test('login limit is stored per email in the database without the raw email', async () => {
       await db.authAttempt.deleteMany();
       const body = { email: 'limit-target@example.test', password: 'Wrong-password-1' };
