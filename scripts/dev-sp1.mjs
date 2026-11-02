@@ -2,7 +2,18 @@ import { spawn } from 'node:child_process';
 import { startDatabase, runNode, root } from './local-db.mjs';
 
 if (process.env.NODE_ENV === 'production') throw new Error('dev:sp1 is a local development command.');
-const database = await startDatabase();
+let databaseReady = false;
+process.once('exit', () => {
+  if (!databaseReady) { console.error('Orbit stopped before PostgreSQL was ready.'); process.exitCode = 1; }
+});
+let database;
+try {
+  database = await startDatabase();
+  databaseReady = true;
+} catch (error) {
+  console.error(error instanceof Error ? error.message : 'Cannot start PostgreSQL.');
+  process.exit(1);
+}
 const apiPort = process.env.API_PORT ?? '4000';
 const webPort = process.env.WEB_PORT ?? '3000';
 const env = {

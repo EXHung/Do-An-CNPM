@@ -4,8 +4,20 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { connect } from 'node:net';
 
 export const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+
+function portInUse(port) {
+  return new Promise(done => {
+    const socket = connect({ host: '127.0.0.1', port });
+    socket.setTimeout(1000);
+    const finish = used => { socket.destroy(); done(used); };
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+  });
+}
 
 export async function startDatabase({ test = false } = {}) {
   const directory = resolve(root, '.local', test ? `test-${randomUUID()}` : 'development');
@@ -18,6 +30,10 @@ export async function startDatabase({ test = false } = {}) {
     if (error.code !== 'ENOENT') throw error;
     config = { port: test ? 55433 : 55432, password: randomBytes(24).toString('hex') };
     await writeFile(configFile, JSON.stringify(config), { mode: 0o600 });
+  }
+  // embedded-postgres ends the process silently when the data directory is already in use.
+  if (await portInUse(config.port)) {
+    throw new Error(`PostgreSQL is already running on port ${config.port}. Stop the old session with: pnpm db:stop`);
   }
   const pg = new EmbeddedPostgres({
     databaseDir: resolve(directory, 'postgres'),

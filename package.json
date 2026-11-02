@@ -9,6 +9,7 @@
     "dev": "next dev apps/web",
     "dev:sp1": "node scripts/dev-sp1.mjs",
     "db:local": "node scripts/local-db.mjs",
+    "db:stop": "node scripts/stop-db.mjs",
     "api:types": "openapi-typescript packages/contracts/openapi.yaml -o packages/contracts/api.generated.ts",
     "build": "next build apps/web",
     "typecheck": "tsc --noEmit",
