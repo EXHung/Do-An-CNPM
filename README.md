@@ -32,9 +32,9 @@ Lần đầu mở trang, đăng ký tài khoản mới rồi tạo workspace. Đ
 
 | Người phụ trách | Phạm vi | Module chính | Tỷ trọng dự kiến |
 |---|---|---|---|
-| Phạm Minh Hùng — Thành viên 1 | Giao diện SP1, tích hợp API, email mời SMTP, E2E và demo | `apps/web`, `apps/api/src/mail`, `tests/e2e` | 35% |
-| Nguyễn Hoàng Phú — Thành viên 2 | Xác thực, phiên, AuthGuard, giới hạn đăng nhập, dữ liệu tài khoản, chạy local và CI | `apps/api/src/auth`, `common`, `database`, `scripts`, `.github` | 30% |
-| Phạm Minh Hoàng — Thành viên 3 | Workspace, thành viên, mã mời, phân quyền, version, transaction, audit và outbox | `apps/api/src/workspaces`, schema liên quan | 35% |
+| Phạm Minh Hùng | Giao diện SP1, tích hợp API, email mời SMTP, E2E và demo | `apps/web`, `apps/api/src/mail`, `tests/e2e` | 35% |
+| Nguyễn Hoàng Phú | Xác thực, phiên, AuthGuard, giới hạn đăng nhập, dữ liệu tài khoản, chạy local và CI | `apps/api/src/auth`, `common`, `database`, `scripts`, `.github` | 30% |
+| Phạm Minh Hoàng | Workspace, thành viên, mã mời, phân quyền, version, transaction, audit và outbox | `apps/api/src/workspaces`, schema liên quan | 35% |
 
 Bảng phân công, các đầu việc và kịch bản nghiệm thu có trong `outputs/SP1_PhanCong_Va_NghiemThu.md`. Phạm Minh Hùng là người dùng đã xác nhận phân công này. Tỷ trọng là ước lượng khối lượng được giao, không xác nhận lịch sử đóng góp/commit. Mỗi thành viên kiểm thử module của mình; Phú và Hoàng phối hợp schema/integration backend, Hùng phụ trách chính E2E và demo.
 

@@ -6,17 +6,17 @@ Hoàn thiện US01 và US02 của đồ án Orbit Workspace: người dùng đă
 
 ## Phân công nhóm ba thành viên
 
-Phân công được Phạm Minh Hùng xác nhận ngày 02/11/2026. Phạm Minh Hùng là thành viên 1 và phụ trách cả phần email làm thêm. Tỷ trọng dưới đây là ước lượng công việc được giao, không phải tỷ lệ đóng góp đã được xác minh.
+Phân công được Phạm Minh Hùng xác nhận ngày 02/11/2026. Phạm Minh Hùng phụ trách cả phần email làm thêm. Tỷ trọng dưới đây là ước lượng công việc được giao, không phải tỷ lệ đóng góp đã được xác minh.
 
 | Người phụ trách | Công việc và sản phẩm bàn giao | Code chính | Độ khó | Tỷ trọng |
 |---|---|---|---|---|
-| Phạm Minh Hùng — Thành viên 1 | Giao diện đăng ký/đăng nhập, workspace, thành viên, nhật ký; nối API; responsive/dark/light; email mời SMTP và liên kết nhận lời mời; E2E và demo | `apps/web`, `apps/api/src/mail`, `tests/e2e` | 4/5 | 35% |
-| Nguyễn Hoàng Phú — Thành viên 2 | API tài khoản, băm mật khẩu, phiên/cookie, AuthGuard, giới hạn đăng nhập, lỗi chung; dữ liệu tài khoản; cấu hình chạy local và CI | `apps/api/src/auth`, `common`, `database`, `scripts`, `.github` | 4/5 | 30% |
-| Phạm Minh Hoàng — Thành viên 3 | API workspace/thành viên; vòng đời mã mời; RBAC; version và transaction; audit/outbox; schema liên quan | `apps/api/src/workspaces`, Prisma schema | 4,5/5 | 35% |
+| Phạm Minh Hùng | Giao diện đăng ký/đăng nhập, workspace, thành viên, nhật ký; nối API; responsive/dark/light; email mời SMTP và liên kết nhận lời mời; E2E và demo | `apps/web`, `apps/api/src/mail`, `tests/e2e` | 4/5 | 35% |
+| Nguyễn Hoàng Phú | API tài khoản, băm mật khẩu, phiên/cookie, AuthGuard, giới hạn đăng nhập, lỗi chung; dữ liệu tài khoản; cấu hình chạy local và CI | `apps/api/src/auth`, `common`, `database`, `scripts`, `.github` | 4/5 | 30% |
+| Phạm Minh Hoàng | API workspace/thành viên; vòng đời mã mời; RBAC; version và transaction; audit/outbox; schema liên quan | `apps/api/src/workspaces`, Prisma schema | 4,5/5 | 35% |
 
 ## Đầu việc theo người phụ trách
 
-### Phạm Minh Hùng — Thành viên 1
+### Phạm Minh Hùng
 
 - TV1-01: giao diện đăng ký/đăng nhập, kiểm tra form và thông báo lỗi.
 - TV1-02: giao diện tạo/chọn/cập nhật workspace và quản lý thành viên theo quyền.
@@ -25,7 +25,7 @@ Phân công được Phạm Minh Hùng xác nhận ngày 02/11/2026. Phạm Minh
 - TV1-05: email mời SMTP, template, liên kết nhận lời mời và phản hồi gửi thư; không đưa khóa SMTP vào Git.
 - TV1-06: phụ trách chính Playwright E2E, kiểm tra giao diện và demo; nhờ Phú/Hoàng hỗ trợ các luồng backend.
 
-### Nguyễn Hoàng Phú — Thành viên 2
+### Nguyễn Hoàng Phú
 
 - TV2-01: dữ liệu tài khoản/phiên và hợp đồng API xác thực; phối hợp Prisma schema với Hoàng.
 - TV2-02: API đăng ký/đăng nhập; băm mật khẩu bằng scrypt trong chế độ local.
@@ -34,7 +34,7 @@ Phân công được Phạm Minh Hùng xác nhận ngày 02/11/2026. Phạm Minh
 - TV2-05: cấu hình PostgreSQL local, script khởi động, migration và CI; không sửa migration đã triển khai.
 - TV2-06: unit tests xác thực; phối hợp Hoàng kiểm thử tích hợp backend và hỗ trợ Hùng tích hợp cookie/phiên.
 
-### Phạm Minh Hoàng — Thành viên 3
+### Phạm Minh Hoàng
 
 - TV3-01: tạo/xem workspace và membership Owner; phối hợp schema với Phú.
 - TV3-02: cập nhật workspace với version để phát hiện xung đột.
