@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+enum StatusType {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+  CANCELLED
+}
+
+model UserProfile {
+  id           String            @id @default(uuid())
+  email        String            @unique
+  displayName  String
+  avatarUrl    String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  members      WorkspaceMember[]
+  tasksCreated Task[]
+  passwordAccount PasswordAccount?
+  sessions     Session[]
+}
+
+model Workspace {
+  id        String            @id @default(uuid())
+  name      String
+  slug      String            @unique
+  description String          @default("")
+  version   Int               @default(1)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  members   WorkspaceMember[]
+  projects  Project[]
+  statuses  WorkflowStatus[]
+  tasks     Task[]
+  invitations Invitation[]
+  auditLogs AuditLog[]
+  outboxEvents OutboxEvent[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole
+  version     Int           @default(1)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        UserProfile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  workspaceId String
+  key         String
+  name        String
+  status      ProjectStatus @default(PLANNED)
+  startAt     DateTime?
+  targetAt    DateTime?
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  @@unique([workspaceId, key])
+  @@unique([id, workspaceId])
+  @@index([workspaceId, status])
+}
+
+model WorkflowStatus {
+  id          String        @id @default(uuid())
+  workspaceId String
+  name        String
+  type        StatusType
+  position    Float
+  color       String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  @@index([workspaceId, position])
+  @@unique([id, workspaceId])
+}
+
+model Task {
+  id               String         @id @default(uuid())
+  workspaceId      String
+  projectId        String
+  parentTaskId     String?
+  humanReadableKey String
+  title            String
+  description      String?
+  statusId         String
+  priority         TaskPriority   @default(MEDIUM)
+  startAt          DateTime?
+  dueAt            DateTime?
+  estimateMinutes  Int?
+  position         Float
+  version          Int            @default(1)
+  createdById      String
+  completedAt      DateTime?
+  deletedAt        DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  workspace        Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project          Project        @relation(fields: [projectId, workspaceId], references: [id, workspaceId], onDelete: Cascade)
+  status           WorkflowStatus @relation(fields: [statusId, workspaceId], references: [id, workspaceId])
+  parent           Task?          @relation("TaskChildren", fields: [parentTaskId, projectId, workspaceId], references: [id, projectId, workspaceId])
+  children         Task[]         @relation("TaskChildren")
+  createdBy        UserProfile    @relation(fields: [createdById], references: [id])
+  @@unique([workspaceId, humanReadableKey])
+  @@unique([id, projectId, workspaceId])
+  @@index([projectId, statusId, position])
+  @@index([workspaceId, dueAt])
+}
+
+model PasswordAccount {
+  userId       String      @id
+  passwordHash String
+  user         UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id            String      @id @default(uuid())
+  tokenHash     String      @unique
+  userId        String
+  expiresAt     DateTime
+  providerToken String?
+  createdAt     DateTime    @default(now())
+  user          UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Invitation {
+  id          String        @id @default(uuid())
+  workspaceId String
+  email       String
+  role        WorkspaceRole
+  tokenHash   String        @unique
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  invitedById String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@index([workspaceId, email])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  workspaceId String
+  actorId     String
+  action      String
+  entityId    String
+  details     Json?
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@index([workspaceId, createdAt])
+}
+
+model OutboxEvent {
+  id          String    @id @default(uuid())
+  workspaceId String
+  eventType   String
+  payload     Json
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@index([processedAt, createdAt])
+}
+
+model AuthAttempt {
+  key          String   @id
+  count        Int
+  windowEndsAt DateTime
+  @@index([windowEndsAt])
+}

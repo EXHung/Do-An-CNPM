@@ -1,0 +1,381 @@
+openapi: 3.0.3
+info:
+  title: Orbit Workspace SP1 API
+  version: 1.0.0
+  description: Authentication, workspaces and current database membership. Cookie mutations require the configured WEB_ORIGIN. Invitation tokens are exchanged manually in SP1.
+servers:
+  - url: http://localhost:4000/api/v1
+security:
+  - sessionCookie: []
+paths:
+  /health:
+    get:
+      operationId: health
+      security: []
+      responses:
+        '200': { description: Service status }
+  /auth/register:
+    post:
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Registration' }
+      responses:
+        '201':
+          description: Account and cookie session, or Supabase email confirmation required
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - { $ref: '#/components/schemas/Identity' }
+                  - type: object
+                    required: [requiresConfirmation, authMode]
+                    properties:
+                      requiresConfirmation: { type: boolean, enum: [true] }
+                      authMode: { type: string, enum: [supabase] }
+        '400': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/login:
+    post:
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Credentials' }
+      responses:
+        '200':
+          description: Logged in; sets HttpOnly orbit_session cookie
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Identity' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/logout:
+    post:
+      operationId: logout
+      security: []
+      responses:
+        '200': { description: Session revoked and cookie cleared; idempotent }
+  /me:
+    get:
+      operationId: currentUser
+      responses:
+        '200':
+          description: Authenticated identity
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Identity' }
+        '401': { $ref: '#/components/responses/Error' }
+  /workspaces:
+    get:
+      operationId: listMyWorkspaces
+      responses:
+        '200':
+          description: Workspaces of current user only
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Workspace' }
+        '401': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createWorkspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, slug]
+              properties:
+                name: { type: string, minLength: 2, maxLength: 100 }
+                slug: { type: string, minLength: 3, maxLength: 60, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+                description: { type: string, maxLength: 1000 }
+      responses:
+        '201':
+          description: Workspace and OWNER membership created with audit and outbox
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workspace' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /workspaces/{workspaceId}:
+    parameters:
+      - { $ref: '#/components/parameters/WorkspaceId' }
+    get:
+      operationId: getWorkspace
+      responses:
+        '200':
+          description: Workspace with current role
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workspace' }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      operationId: updateWorkspace
+      description: OWNER or ADMIN only. Version is checked in update predicate. A stale value returns 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, description, version]
+              properties:
+                name: { type: string, minLength: 2, maxLength: 100 }
+                description: { type: string, maxLength: 1000 }
+                version: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Updated workspace
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workspace' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /workspaces/{workspaceId}/members:
+    parameters:
+      - { $ref: '#/components/parameters/WorkspaceId' }
+    get:
+      operationId: listMembers
+      responses:
+        '200':
+          description: Workspace members; requires current membership
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Member' }
+        '404': { $ref: '#/components/responses/Error' }
+  /workspaces/{workspaceId}/members/{memberId}:
+    parameters:
+      - { $ref: '#/components/parameters/WorkspaceId' }
+      - in: path
+        name: memberId
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      operationId: changeMemberRole
+      description: OWNER may manage non-owner roles; ADMIN may manage lower roles only. Self-mutation is forbidden. Workspace lock serializes policy evaluation and write.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [role]
+              properties:
+                role: { $ref: '#/components/schemas/AssignableRole' }
+      responses:
+        '200':
+          description: Updated member
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    delete:
+      operationId: removeMember
+      description: Cannot remove self or OWNER; ADMIN cannot remove another ADMIN.
+      responses:
+        '200': { description: Member removed; next request loses workspace access }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /workspaces/{workspaceId}/invitations:
+    parameters:
+      - { $ref: '#/components/parameters/WorkspaceId' }
+    get:
+      operationId: listPendingInvitations
+      responses:
+        '200':
+          description: Unused unexpired invitations; no secret tokens
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Invitation' }
+        '403': { $ref: '#/components/responses/Error' }
+    post:
+      operationId: createInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, role]
+              properties:
+                email: { type: string, format: email, maxLength: 254 }
+                role: { $ref: '#/components/schemas/AssignableRole' }
+      responses:
+        '201':
+          description: Token returned once only; share manually. Seven day expiration.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/Invitation' }
+                  - type: object
+                    required: [inviteToken]
+                    properties:
+                      inviteToken: { type: string, pattern: '^[a-f0-9]{64}$' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /workspaces/{workspaceId}/invitations/{invitationId}:
+    parameters:
+      - { $ref: '#/components/parameters/WorkspaceId' }
+      - in: path
+        name: invitationId
+        required: true
+        schema: { type: string, format: uuid }
+    delete:
+      operationId: revokeInvitation
+      responses:
+        '200': { description: Invitation revoked }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /invitations/accept:
+    post:
+      operationId: acceptInvitation
+      description: Authenticated email must match invitation. Expiry, one-time token and issuer current permissions checked within transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token]
+              properties:
+                token: { type: string, pattern: '^[a-f0-9]{64}$' }
+      responses:
+        '201':
+          description: Membership created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workspace' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /workspaces/{workspaceId}/audit:
+    parameters:
+      - { $ref: '#/components/parameters/WorkspaceId' }
+    get:
+      operationId: listAuditEvents
+      responses:
+        '200':
+          description: Latest 100 events; OWNER and ADMIN only
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AuditEvent' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    sessionCookie: { type: apiKey, in: cookie, name: orbit_session }
+  parameters:
+    WorkspaceId:
+      in: path
+      name: workspaceId
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    Error:
+      description: API error with requestId; all protected endpoints can return 401, 400 validation errors or 500 internal errors
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, message, requestId]
+            properties:
+              code: { type: string }
+              message: { type: string }
+              requestId: { type: string, format: uuid }
+              details: { type: object }
+  schemas:
+    AuditEvent:
+      type: object
+      required: [id, workspaceId, actorId, action, entityId, details, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        workspaceId: { type: string, format: uuid }
+        actorId: { type: string, format: uuid }
+        action: { type: string }
+        entityId: { type: string, format: uuid }
+        details: { type: object, additionalProperties: true, nullable: true }
+        createdAt: { type: string, format: date-time }
+    Role: { type: string, enum: [OWNER, ADMIN, MANAGER, MEMBER, VIEWER] }
+    AssignableRole: { type: string, enum: [ADMIN, MANAGER, MEMBER, VIEWER] }
+    Credentials:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 10, maxLength: 128, format: password }
+    Registration:
+      type: object
+      additionalProperties: false
+      required: [email, password, displayName]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 10, maxLength: 128, format: password }
+        displayName: { type: string, minLength: 1, maxLength: 100 }
+    User:
+      type: object
+      required: [id, email, displayName]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        displayName: { type: string }
+    Identity:
+      type: object
+      required: [user, authMode]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        authMode: { type: string, enum: [local, supabase] }
+    Workspace:
+      type: object
+      required: [id, name, slug, description, version, role, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        version: { type: integer }
+        role: { $ref: '#/components/schemas/Role' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Member:
+      type: object
+      required: [id, userId, role, user]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        role: { $ref: '#/components/schemas/Role' }
+        user: { $ref: '#/components/schemas/User' }
+    Invitation:
+      type: object
+      required: [id, email, role, expiresAt, createdAt, acceptedAt]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/AssignableRole' }
+        expiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        acceptedAt: { type: string, format: date-time, nullable: true }
