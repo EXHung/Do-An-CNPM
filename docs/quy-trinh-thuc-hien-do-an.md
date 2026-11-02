@@ -13,13 +13,13 @@ Yêu cầu → Use case → UI → API → Authentication → Authorization
 
 ## 2. Phương pháp làm việc
 
-Áp dụng **Scrum nhẹ theo Sprint một tuần**, phù hợp đồ án cá nhân/nhóm nhỏ:
+Áp dụng **Agile theo 5 sprint của học phần, có checkpoint mỗi tuần**, phù hợp nhóm ba người:
 
 - Product Backlog: toàn bộ yêu cầu, được sắp xếp theo giá trị và rủi ro.
-- Sprint Backlog: các task cam kết trong một tuần.
+- Sprint Backlog: các task cam kết trong sprint, phân bổ checkpoint theo tuần.
 - Increment: phần mềm chạy được sau mỗi Sprint.
-- Review: trình diễn trực tiếp chức năng đã hoàn thành.
-- Retrospective: đánh giá cách làm và điều chỉnh Sprint sau.
+- Review: trình diễn trực tiếp chức năng đã hoàn thành cuối sprint; cập nhật ngắn mỗi tuần.
+- Retrospective: đánh giá cách làm và điều chỉnh sprint sau. Lịch sprint có độ dài khác nhau nên không coi đây là Scrum với timebox đồng nhất.
 - Không coi tài liệu, mockup hoặc code chưa test là sản phẩm hoàn thành.
 
 Lịch chi tiết và ngày cụ thể nằm trong [`agile-plan.md`](agile-plan.md).

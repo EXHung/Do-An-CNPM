@@ -1,26 +1,26 @@
-# Kế hoạch Agile/Scrum — Orbit Workspace
+# Kế hoạch Agile — 5 sprint Orbit Workspace
 
 ## 1. Kết luận về phương pháp
 
-Kế hoạch hiện tại **đã theo tư duy Agile** ở các điểm: chia theo vertical slice, ưu tiên MVP, phản hồi sớm, kiểm thử liên tục và cho phép điều chỉnh phạm vi. Tuy nhiên, để gọi là kế hoạch Scrum rõ ràng cần bổ sung:
+Áp dụng Agile theo 5 sprint của học phần, có checkpoint mỗi tuần. Mỗi sprint tập trung vào một nhóm chức năng chạy được, kiểm thử liên tục và nhận phản hồi. Các sprint có độ dài khác nhau theo lịch bên dưới nên chưa phải Scrum với timebox đồng nhất. Bảng này thay lịch cũ chia 10 sprint.
 
 - Product Backlog có thứ tự ưu tiên và tiêu chí chấp nhận.
-- Sprint cố định một tuần, Sprint Goal và Sprint Backlog.
-- Review cuối tuần với phần mềm chạy được.
-- Retrospective cuối tuần để điều chỉnh cách làm.
+- Sprint Goal và Sprint Backlog; phân bổ checkpoint theo tuần học.
+- Checkpoint cuối tuần và review cuối sprint với phần mềm chạy được.
+- Retrospective cuối sprint để điều chỉnh cách làm.
 - Definition of Ready và Definition of Done.
-- Không đổi Sprint Goal giữa tuần; thay đổi mới đưa vào backlog tuần sau.
+- Thay đổi mới được đánh giá và đưa vào backlog; không tự mở rộng Sprint Goal.
 
 Ảnh tham khảo về 4 giá trị, 12 nguyên tắc Agile và Scrum được dùng như cơ sở phương pháp luận; đây không phải là yêu cầu giao diện hay nội dung phải sao chép vào phần mềm.
 
 ## 2. Nhịp làm việc mỗi Sprint
 
-Mỗi Sprint kéo dài 7 ngày, từ thứ Ba đến thứ Hai. Ngày thứ Ba bắt đầu Sprint mới; ngày thứ Hai review và retrospective. Người dùng/giảng viên có thể tham gia review hoặc phản hồi backlog.
+Một tuần học kéo dài từ thứ Ba đến thứ Hai, là checkpoint trong sprint. Đầu sprint planning, mỗi tuần cập nhật tiến độ, cuối sprint review/retrospective. Người dùng/giảng viên có thể tham gia review hoặc phản hồi backlog.
 
 ```text
-Thứ Ba     Sprint planning, chốt Sprint Goal và task
+Thứ Ba     Planning nếu đầu sprint; chọn checkpoint nếu giữa sprint
 Thứ Tư–CN  Phân tích, thiết kế, code, test và cập nhật board
-Thứ Hai    Demo/review, đo acceptance criteria, retrospective
+Thứ Hai    Cập nhật/demo; review và retrospective nếu cuối sprint
 Hằng ngày  Stand-up 10–15 phút: đã làm, sẽ làm, blocker
 ```
 
@@ -32,22 +32,26 @@ Một task chỉ được kéo vào Sprint khi có actor, mô tả hành vi, acc
 
 Task chỉ được đánh dấu Done khi code hoàn chỉnh, typecheck pass, test phù hợp pass, có xử lý lỗi/loading/permission, được review và cập nhật tài liệu cần thiết.
 
-## 3. Lịch triển khai chính thức
+## 3. Lịch dự kiến theo tuần và sprint
 
-| Sprint | Thời gian | Sprint Goal | Công việc nhỏ phải hoàn thành | Đầu ra/tiêu chí nghiệm thu |
+| Tuần | Thời gian 2026 | Sprint | Mục tiêu checkpoint | Nội dung push khi hoàn thành |
 |---|---|---|---|---|
-| 1 | 13/10–19/10 | Chốt sản phẩm và dựng nền tảng | Product backlog; personas/use cases; ERD sơ bộ; monorepo; env example; CI; design tokens; dashboard shell | Chạy được web/API skeleton; backlog có thứ tự; team giải thích được kiến trúc |
-| 2 | 20/10–26/10 | Identity và database foundation | Prisma schema; migration; seed; Supabase Auth contract; profile/session; route protection; error format | Schema validate/generate; login flow được mô tả và route protected từ chối user chưa đăng nhập |
-| 3 | 27/10–02/11 | Workspace và RBAC | Workspace CRUD; member list; invitation; role matrix; auth guard; membership policy; cross-workspace tests | Owner/Admin/Manager/Member/Viewer hoạt động đúng; Viewer không mutate; không có IDOR trong test |
-| 4 | 03/11–09/11 | Project và task core | Project CRUD; status; priority; labels; assignee; task key; subtask một cấp; task detail drawer | Tạo/sửa task trong project; task luôn thuộc workspace hợp lệ; acceptance tests pass |
-| 5 | 10/11–16/11 | Ba view từ một Task dataset | List; Kanban; Calendar; filter/sort; shared query model; position ranking; `moveTask`; version conflict | Cùng task xuất hiện nhất quán ở List/Kanban/Calendar; move trả `409` nếu version cũ |
-| 6 | 17/11–23/11 | Collaboration và audit | Comment; private attachment metadata; activity feed; audit event; transaction boundary; progress calculation | Comment/file/activity hiển thị đúng quyền; mutation quan trọng có audit; progress tính ở server |
-| 7 | 24/11–30/11 | Dashboard và báo cáo MVP | Project summary; status/overdue report; project health; empty/loading/error states; responsive core screens | Dashboard phản ánh task thật; report lọc được; mobile layout dùng được |
-| 8 | 01/12–07/12 | Hardening và kiểm thử | Unit tests domain; integration tests với DB test; security-negative tests; keyboard/focus; reduced motion; rate limit/logging | CI pass lint/typecheck/unit/integration; viewer/cross-workspace/private-file cases bị chặn |
-| 9 | 08/12–14/12 | Tính năng nổi bật có kiểm soát | Chọn tối đa 2: Timeline cơ bản, time tracking, realtime, notification inbox, docs hoặc search | Hai tính năng được chọn có acceptance criteria, test và demo; không mở thêm scope ngoài Sprint |
-| 10 | 15/12–21/12 | Đóng băng bản dự án | Regression; seed demo; API/OpenAPI; ERD/sequence/architecture diagrams; deployment; performance/accessibility smoke test; demo script | Bản dự án hoàn chỉnh chạy được; critical flow từ signup đến report không dùng mock UI thay backend |
-| Release gate | 22/12 | Nghiệm thu và khóa phạm vi | Chạy lại acceptance checklist; chốt release candidate; tag phiên bản; sao lưu seed/demo; ghi danh sách blocker còn lại | Kết thúc phát triển chính thức; mọi thay đổi sau ngày này chỉ là nâng cấp/polish phục vụ báo cáo |
-| Upgrade | 23/12–29/12 | Nâng cấp cuối cùng và chuẩn bị báo cáo | Sửa blocker từ Sprint 10; polish UI; tối ưu lỗi hiệu năng; hoàn thiện báo cáo/slides; quay demo; rehearsal phản biện | Release candidate đóng băng; báo cáo, slide, demo dataset và câu trả lời phản biện sẵn sàng |
+| 1 | 13/10–19/10 | SP1 | Phạm vi, thiết kế và nền tảng | Web/API skeleton, schema và cấu hình |
+| 2 | 20/10–26/10 | SP1 | Tài khoản và phiên | Đăng ký/đăng nhập/đăng xuất, AuthGuard và kiểm thử |
+| 3 | 27/10–02/11 | SP1 | Workspace, RBAC và tích hợp | Thành viên, mã mời, UI, kiểm thử quyền; email bổ sung |
+| 4 | 03/11–09/11 | SP2 | Quản lý dự án | Project API/UI, owner, status/date và quyền |
+| 5 | 10/11–16/11 | SP2 | Tạo và phân công nhiệm vụ | Task CRUD, assignee, hạn hoàn thành và tích hợp |
+| 6 | 17/11–23/11 | SP3 | Chi tiết nhiệm vụ | Status, priority, labels và subtask một cấp |
+| 7 | 24/11–30/11 | SP3 | Theo dõi nhiệm vụ | List/Kanban/Calendar, move/version/rollback |
+| 8 | 01/12–07/12 | SP4 | Trao đổi và tìm thông tin | Comment, private attachment và task filter/search |
+| 9 | 08/12–14/12 | SP4 | Tổng hợp tiến độ | Progress tính ở server, status/overdue report và kiểm thử |
+| 10 | 15/12–21/12 | SP5 | Hoàn thiện, nghiệm thu tổng thể | Regression, responsive/accessibility, deployment, tài liệu/demo |
+| Chốt | 22/12 | Release | Khóa phạm vi và bàn giao | Tag phiên bản được nghiệm thu, ghi blocker còn lại |
+| Bổ sung | 23/12–29/12 | Sau SP5 | Nâng cấp cuối để báo cáo | Sửa blocker, polish, báo cáo, slide và demo |
+
+Lần nhập SP1 lên GitHub được chuẩn bị ngày 02/11/2026. Bảng là kế hoạch phân bổ, không xác nhận đã push trong tuần 1/2; commit giữ ngày thực tế. SP2–SP5 chưa được xác nhận hoàn thành. Quy tắc GitHub nằm trong `github-workflow.md`; mẫu cập nhật tuần nằm trong `progress/README.md`.
+
+Phân công SP1: Phạm Minh Hùng phụ trách UI/integration/email/E2E (35%); Nguyễn Hoàng Phú phụ trách auth/nền tảng/local/CI (30%); Phạm Minh Hoàng phụ trách workspace/RBAC/invite token/transaction (35%). Đây là tỷ trọng dự kiến, không xác nhận đóng góp lịch sử.
 
 ## 4. Product Backlog ưu tiên
 
@@ -62,9 +66,9 @@ Task chỉ được đánh dấu Done khi code hoàn chỉnh, typecheck pass, te
 7. Responsive, dark/light, accessibility cơ bản.
 8. Unit, integration và security-negative tests.
 
-### Có thể làm trong Sprint 9
+### Chỉ cân nhắc sau khi luồng chính ổn định
 
-Chọn tối đa hai tính năng: Timeline, time tracking, realtime, notification inbox, project docs hoặc global search.
+Timeline, time tracking, realtime, notification inbox, project docs hoặc global search là backlog mở rộng; không cam kết trong SP1 hoặc tự mở thêm ở tuần 9.
 
 ### Không đưa vào scope chính
 
@@ -72,7 +76,7 @@ Automation engine, recurring task, custom fields, integrations, AI assistant, cr
 
 ## 5. Cách đánh giá mỗi tuần
 
-Cuối Sprint ghi lại:
+Mỗi tuần ghi checkpoint; cuối sprint tổng hợp:
 
 - Sprint Goal: đạt/không đạt và lý do.
 - Số story/task committed và completed.
