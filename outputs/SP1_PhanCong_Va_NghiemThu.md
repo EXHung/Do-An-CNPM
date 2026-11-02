@@ -6,47 +6,53 @@ Hoàn thiện US01 và US02 của đồ án Orbit Workspace: người dùng đă
 
 ## Phân công nhóm ba thành viên
 
-Các nhãn dưới đây dùng để phân chia trách nhiệm. Điền tên thật khi đưa vào báo cáo và ghi nhận đóng góp thực tế bằng commit/task đã hoàn thành.
+Phân công được Phạm Minh Hùng xác nhận ngày 02/11/2026. Phạm Minh Hùng là thành viên 1 và phụ trách cả phần email làm thêm. Tỷ trọng dưới đây là ước lượng công việc được giao, không phải tỷ lệ đóng góp đã được xác minh.
 
-| Người phụ trách | Công việc | Sản phẩm bàn giao | Phối hợp và review |
-|---|---|---|---|
-| Thành viên 1 | Xác thực và dữ liệu | API đăng ký/đăng nhập/đăng xuất; kiểm tra phiên; AuthGuard; Prisma schema và cấu trúc dữ liệu người dùng | Thống nhất AuthUser với TV2; thống nhất response/cookie với TV3; review bảo mật với TV2 |
-| Thành viên 2 | Không gian và thành viên | API workspace, danh sách thành viên, lời mời, đổi vai trò, xóa thành viên; policy; audit và outbox | Dùng AuthGuard/Prisma của TV1; bàn giao API cho TV3; review quy tắc quyền với TV1 |
-| Thành viên 3 | Giao diện và tích hợp | Trang đăng nhập/đăng ký, workspace và thành viên; nối API; PostgreSQL local; integration/E2E và CI | Tích hợp response của TV1/TV2; báo lỗi từ E2E; chuẩn bị demo chung |
+| Người phụ trách | Công việc và sản phẩm bàn giao | Code chính | Độ khó | Tỷ trọng |
+|---|---|---|---|---|
+| Phạm Minh Hùng — Thành viên 1 | Giao diện đăng ký/đăng nhập, workspace, thành viên, nhật ký; nối API; responsive/dark/light; email mời SMTP và liên kết nhận lời mời; E2E và demo | `apps/web`, `apps/api/src/mail`, `tests/e2e` | 4/5 | 35% |
+| Nguyễn Hoàng Phú — Thành viên 2 | API tài khoản, băm mật khẩu, phiên/cookie, AuthGuard, giới hạn đăng nhập, lỗi chung; dữ liệu tài khoản; cấu hình chạy local và CI | `apps/api/src/auth`, `common`, `database`, `scripts`, `.github` | 4/5 | 30% |
+| Phạm Minh Hoàng — Thành viên 3 | API workspace/thành viên; vòng đời mã mời; RBAC; version và transaction; audit/outbox; schema liên quan | `apps/api/src/workspaces`, Prisma schema | 4,5/5 | 35% |
 
 ## Đầu việc theo người phụ trách
 
-### Thành viên 1
+### Phạm Minh Hùng — Thành viên 1
 
-- TV1-01: xác định dữ liệu tài khoản, phiên và hợp đồng API.
-- TV1-02: triển khai đăng ký và đăng nhập; băm mật khẩu bằng scrypt trong chế độ local.
-- TV1-03: lưu hash session token; cookie HttpOnly; đăng xuất thu hồi phiên.
-- TV1-04: triển khai AuthGuard và error response chung.
-- TV1-05: hỗ trợ adapter Supabase và kiểm tra cấu hình.
-- TV1-06: kiểm thử password hashing, phiên sai/hết hạn và đăng xuất.
+- TV1-01: giao diện đăng ký/đăng nhập, kiểm tra form và thông báo lỗi.
+- TV1-02: giao diện tạo/chọn/cập nhật workspace và quản lý thành viên theo quyền.
+- TV1-03: giao diện tạo/nhận/thu hồi lời mời, nhật ký hoạt động, responsive và dark/light.
+- TV1-04: tích hợp API và kiểu từ OpenAPI; phối hợp xử lý lỗi phiên, quyền và version.
+- TV1-05: email mời SMTP, template, liên kết nhận lời mời và phản hồi gửi thư; không đưa khóa SMTP vào Git.
+- TV1-06: phụ trách chính Playwright E2E, kiểm tra giao diện và demo; nhờ Phú/Hoàng hỗ trợ các luồng backend.
 
-### Thành viên 2
+### Nguyễn Hoàng Phú — Thành viên 2
 
-- TV2-01: tạo workspace kèm membership Owner; xem danh sách và chi tiết.
-- TV2-02: cập nhật workspace với version để phát hiện xung đột.
-- TV2-03: xem thành viên; kiểm tra quyền Owner/Admin/Manager/Member/Viewer.
-- TV2-04: tạo, chấp nhận và thu hồi lời mời có hạn dùng, đúng email và chỉ dùng một lần.
-- TV2-05: đổi vai trò/xóa thành viên; giữ nguyên Owner và chặn tự nâng quyền.
-- TV2-06: ghi audit/outbox cùng transaction; kiểm thử policy và truy cập chéo workspace.
+- TV2-01: dữ liệu tài khoản/phiên và hợp đồng API xác thực; phối hợp Prisma schema với Hoàng.
+- TV2-02: API đăng ký/đăng nhập; băm mật khẩu bằng scrypt trong chế độ local.
+- TV2-03: session, cookie HttpOnly, đăng xuất và từ chối phiên hết hạn.
+- TV2-04: AuthGuard, giới hạn đăng nhập, validation/error response chung và adapter Supabase trong phạm vi hiện có.
+- TV2-05: cấu hình PostgreSQL local, script khởi động, migration và CI; không sửa migration đã triển khai.
+- TV2-06: unit tests xác thực; phối hợp Hoàng kiểm thử tích hợp backend và hỗ trợ Hùng tích hợp cookie/phiên.
 
-### Thành viên 3
+### Phạm Minh Hoàng — Thành viên 3
 
-- TV3-01: xây dựng giao diện đăng ký/đăng nhập và thông báo lỗi.
-- TV3-02: giao diện tạo/chọn/cập nhật workspace.
-- TV3-03: giao diện mời, nhận lời mời, danh sách và quản lý thành viên.
-- TV3-04: giao diện theo quyền, desktop/mobile và dark/light.
-- TV3-05: một lệnh khởi động PostgreSQL, migration, API và web.
-- TV3-06: nối kiểu dữ liệu từ OpenAPI, chạy integration/E2E và chuẩn bị demo.
+- TV3-01: tạo/xem workspace và membership Owner; phối hợp schema với Phú.
+- TV3-02: cập nhật workspace với version để phát hiện xung đột.
+- TV3-03: danh sách thành viên và policy Owner/Admin/Manager/Member/Viewer.
+- TV3-04: tạo/nhận/thu hồi mã mời, kiểm tra email, hạn dùng và chỉ dùng một lần; bàn giao dữ liệu cho Hùng gửi email.
+- TV3-05: đổi vai trò/xóa thành viên; giữ nguyên Owner và chặn tự nâng quyền.
+- TV3-06: transaction, audit/outbox; unit tests policy và integration về quyền, truy cập chéo workspace, concurrency và rollback cùng Phú.
+
+### Ranh giới phối hợp
+
+- Hoàng phụ trách nghiệp vụ và mã mời; Hùng phụ trách gửi email, liên kết và giao diện; Phú bảo đảm người nhận có phiên đăng nhập hợp lệ.
+- Phú và Hoàng phối hợp schema/migration và integration backend. Mỗi người kiểm thử phần mình; Hùng phụ trách chính E2E, cả nhóm cùng nghiệm thu.
+- API/OpenAPI được cập nhật cùng thay đổi module; Hùng phối hợp hai người để giữ frontend khớp hợp đồng.
 
 ## Trình tự phối hợp trong SP1
 
 1. Đầu sprint: thống nhất US01/US02, dữ liệu, response và quy tắc quyền; chọn đầu việc theo năng lực.
-2. TV1 và TV2 xây dựng module; TV3 phát triển giao diện theo hợp đồng chung rồi tích hợp API thật.
+2. Phú triển khai xác thực/nền tảng, Hoàng triển khai workspace/phân quyền, Hùng triển khai giao diện/email theo hợp đồng chung rồi tích hợp API thật.
 3. Mỗi người cập nhật tiến độ, khó khăn và kết quả kiểm tra hằng ngày. Các thay đổi contract phải báo cho hai người còn lại.
 4. Review chéo trước khi ghép code. Một người phụ trách chính nhưng ít nhất một người khác phải hiểu và review module.
 5. Cuối sprint: chạy toàn bộ kiểm tra, demo, đối chiếu tiêu chí và ghi retrospective.
@@ -100,13 +106,15 @@ Integration tests dùng PostgreSQL thật riêng, không mock database. E2E gọ
 |---|---|
 | TypeScript strict và API build | Đạt |
 | ESLint, không cảnh báo | Đạt |
-| Unit tests | 10/10 đạt |
-| Integration PostgreSQL thật | 23 ca con đạt; Node báo 24 test gồm test cha |
+| Unit tests | 13/13 đạt ở lượt kiểm chứng trước khi push |
+| Integration PostgreSQL thật | 26 ca con đạt; Node báo 27 test gồm test cha; có SMTP test server |
 | Build web production | Đạt |
-| Playwright Chromium | 2/2 đạt |
-| Kiểm tra ảnh desktop/mobile | Đã xem; viewport mobile 390px không tràn ngang |
+| Playwright Chromium | 3/3 đạt ở lượt kiểm chứng trước khi push |
+| Kiểm tra desktop/mobile | Đã xem ảnh ở bản trước; E2E hiện tại kiểm tra viewport mobile 390px không tràn ngang |
 
 Chưa xác minh trên GitHub Actions, Supabase cloud, Firefox hoặc WebKit. Các kết quả trên chỉ áp dụng cho bản local và phạm vi SP1.
+
+Tổng hợp lần đưa SP1 lên GitHub và giới hạn kiểm chứng SMTP: `docs/progress/SP1.md`. Lịch 5 sprint/checkpoint tuần: `docs/agile-plan.md`.
 
 ## Kịch bản demo ngắn
 
@@ -122,7 +130,7 @@ Chưa xác minh trên GitHub Actions, Supabase cloud, Firefox hoặc WebKit. Cá
 ## Các giới hạn cần nêu đúng khi báo cáo
 
 - Bản học tập chạy local auth và PostgreSQL thật; local auth không được phép chạy ở production.
-- Lời mời được gửi bằng mã thủ công. Chưa tích hợp dịch vụ email.
+- Đã có module gửi email SMTP do Hùng phụ trách. Chưa cấu hình SMTP thì chia sẻ mã thủ công; có code gửi thư không đồng nghĩa đã xác minh thư đến hộp thư thật.
 - Adapter Supabase có trong source nhưng chưa được kiểm chứng với project thật. Cần đăng nhập lại khi access token Supabase hết hạn; chưa có refresh-token flow.
 - Project, task, milestone, bình luận và thống kê không thuộc SP1. Giao diện `/prototype` chứa dữ liệu minh họa cho các sprint sau.
 - Không gọi số lượng test pass là chứng nhận production hoặc bằng chứng toàn bộ bảo mật.
