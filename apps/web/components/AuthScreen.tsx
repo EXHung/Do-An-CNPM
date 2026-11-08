@@ -27,7 +27,7 @@ export function AuthScreen({ onSignedIn, initialError, dark, onTheme }: { onSign
   }
   return <div className="auth-layout">
     <section className="auth-intro">
-      <div className="sp1-logo"><Orbit size={26} aria-hidden="true" />orbit</div>
+      <div className="logo"><Orbit size={26} aria-hidden="true" />orbit</div>
       <div className="intro-copy">
         <h1>Một không gian.<br />Cả nhóm cùng làm.</h1>
         <p>Tổ chức nhóm, quản lý thành viên và xây dựng nền tảng cho những dự án tiếp theo.</p>
@@ -53,7 +53,7 @@ export function AuthScreen({ onSignedIn, initialError, dark, onTheme }: { onSign
           </div>
           {register && <small id="password-hint" className="field-hint">Ít nhất 10 ký tự.</small>}
           <Notice error={error} success={notice} />
-          <button className="sp1-primary full" disabled={pending}>{pending ? 'Đang xử lý…' : register ? 'Tạo tài khoản' : 'Đăng nhập'}<ArrowRight size={17} aria-hidden="true" /></button>
+          <button className="btn-primary full" disabled={pending}>{pending ? 'Đang xử lý…' : register ? 'Tạo tài khoản' : 'Đăng nhập'}<ArrowRight size={17} aria-hidden="true" /></button>
         </form>
       </div>
     </main>

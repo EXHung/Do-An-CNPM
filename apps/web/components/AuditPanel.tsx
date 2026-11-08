@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { History, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { api, ApiError, AuditEvent, Member, Role } from '../lib/api';
 import { roleNames } from '../lib/format';
 
@@ -23,6 +23,12 @@ function describe(event: AuditEvent, members: Member[]) {
     case 'invitation.revoked': return `đã thu hồi lời mời của ${text(details.email)}`;
     case 'member.role_changed': return `đã đổi vai trò của ${target} từ ${role(details.from)} sang ${role(details.to)}`;
     case 'member.removed': return `đã xóa một ${role(details.role)} khỏi nhóm`;
+    case 'project.created': return `đã tạo dự án ${text(details.name)}`;
+    case 'project.updated': return `đã sửa dự án ${text(details.name)}`;
+    case 'task.created': return `đã tạo nhiệm vụ ${text(details.key)}: ${text(details.title)}`;
+    case 'task.updated': return `đã sửa nhiệm vụ ${text(details.key)}: ${text(details.title)}`;
+    case 'task.assigned': return details.assignee ? `đã giao ${text(details.key)} cho ${text(details.assignee)}` : `đã bỏ người thực hiện của ${text(details.key)}`;
+    case 'task.deleted': return `đã xóa nhiệm vụ ${text(details.key)}: ${text(details.title)}`;
     default: return `đã thực hiện ${event.action}`;
   }
 }
@@ -43,11 +49,11 @@ export function AuditPanel({ workspaceId, members, refreshKey, fail }: { workspa
   useEffect(() => { void load(); }, [load, refreshKey]);
   const actorName = (id: string) => members.find(member => member.userId === id)?.user.displayName ?? 'Người đã rời nhóm';
   const visible = expanded ? events : events.slice(0, COLLAPSED_ROWS);
-  return <section className="sp1-panel audit-panel"><div className="panel-head"><div><h2>Nhật ký hoạt động</h2><p>100 thay đổi gần nhất trong không gian. Chỉ chủ sở hữu và quản trị viên xem được.</p></div><History size={20} aria-hidden="true" /></div>
+  return <section className="section audit-panel"><div className="section-head"><div><h2>Nhật ký hoạt động</h2><p>100 thay đổi gần nhất. Chỉ chủ sở hữu và quản trị viên xem được.</p></div></div>
     {loading ? <div className="skeleton-rows" role="status" aria-label="Đang tải nhật ký hoạt động"><i /><i /></div>
-      : loadError ? <><p className="field-error" role="alert">{loadError}</p><button type="button" className="sp1-secondary" onClick={() => void load()}><RefreshCw size={15} aria-hidden="true" />Thử lại</button></>
+      : loadError ? <><p className="field-error" role="alert">{loadError}</p><button type="button" className="btn-secondary" onClick={() => void load()}><RefreshCw size={15} aria-hidden="true" />Thử lại</button></>
       : events.length === 0 ? <p>Chưa có thay đổi nào.</p>
       : <><ol className="audit-list">{visible.map(event => <li key={event.id}><span><strong>{actorName(event.actorId)}</strong> {describe(event, members)}</span><time dateTime={event.createdAt}>{new Date(event.createdAt).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })}</time></li>)}</ol>
-        {events.length > COLLAPSED_ROWS && <button type="button" className="sp1-text" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Thu gọn' : `Xem tất cả ${events.length} thay đổi`}</button>}</>}
+        {events.length > COLLAPSED_ROWS && <button type="button" className="btn-text" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Thu gọn' : `Xem tất cả ${events.length} thay đổi`}</button>}</>}
   </section>;
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Orbit } from 'lucide-react';
-import './sp1.css';
+import './orbit.css';
 import { AuthScreen } from '../components/AuthScreen';
 import { WorkspaceApp } from '../components/WorkspaceApp';
 import { api, ApiError, Identity, message } from '../lib/api';
@@ -34,8 +34,8 @@ export default function Home() {
     try { window.localStorage.setItem(THEME_KEY, next ? 'dark' : 'light'); } catch { /* not persisted */ }
   }
   const expire = useCallback(() => { setInitialError(SESSION_EXPIRED); setIdentity(null); }, []);
-  return <div className={`sp1 ${dark ? 'sp1-dark' : ''}`}>
+  return <div className={`orbit ${dark ? 'orbit-dark' : ''}`}>
     <a className="skip-link" href="#main-content">Bỏ qua đến nội dung chính</a>
-    {booting ? <div className="sp1-loading" role="status"><Orbit size={22} aria-hidden="true" />Đang kiểm tra phiên đăng nhập…</div> : identity ? <WorkspaceApp identity={identity} onSignedOut={() => { setInitialError(''); setIdentity(null); }} onExpired={expire} dark={dark} onTheme={toggleTheme} /> : <AuthScreen onSignedIn={setIdentity} initialError={initialError} dark={dark} onTheme={toggleTheme} />}
+    {booting ? <div className="page-loading" role="status"><Orbit size={22} aria-hidden="true" />Đang kiểm tra phiên đăng nhập…</div> : identity ? <WorkspaceApp identity={identity} onSignedOut={() => { setInitialError(''); setIdentity(null); }} onExpired={expire} dark={dark} onTheme={toggleTheme} /> : <AuthScreen onSignedIn={setIdentity} initialError={initialError} dark={dark} onTheme={toggleTheme} />}
   </div>;
 }
