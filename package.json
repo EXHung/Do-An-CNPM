@@ -16,7 +16,7 @@
     "lint": "eslint apps/api/src apps/web/app apps/web/components apps/web/lib packages/contracts/domain.ts tests/domain.test.ts tests/e2e --max-warnings=0",
     "test": "node scripts/run-unit-tests.mjs",
     "test:policy": "node scripts/run-policy-tests.mjs",
-    "test:integration": "node --test --test-concurrency=1 tests/sp1.integration.cjs",
+    "test:integration": "node --test --test-concurrency=1 tests/sp1.integration.cjs tests/sp2.integration.cjs",
     "test:e2e": "playwright test",
     "api:dev": "ts-node --project apps/api/tsconfig.json apps/api/src/main.ts",
     "api:build": "tsc --project apps/api/tsconfig.json",
