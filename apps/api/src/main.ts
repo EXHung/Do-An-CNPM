@@ -6,15 +6,16 @@ import type { NextFunction, Request, Response } from 'express';
 import { AuthModule } from './auth/auth.module';
 import { ApiExceptionFilter } from './common/api-exception.filter';
 import { DatabaseModule } from './database/database.module';
+import { ProjectsModule } from './projects/projects.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 
 @Controller('api/v1')
 class HealthController {
   @Get('health')
-  health() { return { status: 'ok', service: 'orbit-api', sprint: 'SP1', authMode: process.env.AUTH_MODE ?? 'local' }; }
+  health() { return { status: 'ok', service: 'orbit-api', sprint: 'SP2', authMode: process.env.AUTH_MODE ?? 'local' }; }
 }
 
-@Module({ imports: [DatabaseModule, AuthModule, WorkspacesModule], controllers: [HealthController] })
+@Module({ imports: [DatabaseModule, AuthModule, WorkspacesModule, ProjectsModule], controllers: [HealthController] })
 class AppModule {}
 
 export async function createApp() {

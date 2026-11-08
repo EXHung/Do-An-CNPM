@@ -43,7 +43,9 @@ model UserProfile {
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   members      WorkspaceMember[]
-  tasksCreated Task[]
+  tasksCreated Task[]     @relation("TaskCreator")
+  tasksAssigned Task[]    @relation("TaskAssignee")
+  projectsOwned Project[]
   passwordAccount PasswordAccount?
   sessions     Session[]
 }
@@ -84,10 +86,17 @@ model Project {
   workspaceId String
   key         String
   name        String
+  description String        @default("")
+  ownerId     String?
   status      ProjectStatus @default(PLANNED)
   startAt     DateTime?
   targetAt    DateTime?
+  taskCounter Int           @default(0)
+  version     Int           @default(1)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner       UserProfile?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   tasks       Task[]
   @@unique([workspaceId, key])
   @@unique([id, workspaceId])
@@ -123,6 +132,7 @@ model Task {
   position         Float
   version          Int            @default(1)
   createdById      String
+  assigneeId       String?
   completedAt      DateTime?
   deletedAt        DateTime?
   createdAt        DateTime       @default(now())
@@ -132,11 +142,13 @@ model Task {
   status           WorkflowStatus @relation(fields: [statusId, workspaceId], references: [id, workspaceId])
   parent           Task?          @relation("TaskChildren", fields: [parentTaskId, projectId, workspaceId], references: [id, projectId, workspaceId])
   children         Task[]         @relation("TaskChildren")
-  createdBy        UserProfile    @relation(fields: [createdById], references: [id])
+  createdBy        UserProfile    @relation("TaskCreator", fields: [createdById], references: [id])
+  assignee         UserProfile?   @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   @@unique([workspaceId, humanReadableKey])
   @@unique([id, projectId, workspaceId])
   @@index([projectId, statusId, position])
   @@index([workspaceId, dueAt])
+  @@index([workspaceId, assigneeId])
 }
 
 model PasswordAccount {

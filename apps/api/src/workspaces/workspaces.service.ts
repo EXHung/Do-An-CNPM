@@ -192,7 +192,10 @@ export class WorkspacesService {
       requireManageableMember(actor, target);
       const removed = await db.workspaceMember.deleteMany({ where: { id: target.id, workspaceId, version: target.version } });
       if (!removed.count) throw new ConflictException('Thành viên vừa thay đổi. Hãy tải lại dữ liệu.');
-      await this.record(db, workspaceId, user.id, 'member.removed', target.id, { userId: target.userId, role: target.role });
+      // Work must not stay assigned to someone who can no longer open this workspace.
+      const unassigned = await db.task.updateMany({ where: { workspaceId, assigneeId: target.userId, deletedAt: null }, data: { assigneeId: null, version: { increment: 1 } } });
+      await db.project.updateMany({ where: { workspaceId, ownerId: target.userId }, data: { ownerId: null, version: { increment: 1 } } });
+      await this.record(db, workspaceId, user.id, 'member.removed', target.id, { userId: target.userId, role: target.role, unassignedTasks: unassigned.count });
       return { success: true };
     });
   }
