@@ -1,6 +1,6 @@
-# Orbit Workspace SP1
+# Orbit Workspace
 
-SP1 triển khai US01 và US02: đăng ký, đăng nhập, đăng xuất, phân quyền, tạo/cập nhật không gian làm việc, mời và quản lý thành viên. Giao diện và API dùng dữ liệu PostgreSQL được lưu trên đĩa.
+SP1 triển khai US01 và US02: đăng ký, đăng nhập, đăng xuất, phân quyền, tạo/cập nhật không gian làm việc, mời và quản lý thành viên. SP2 triển khai US04 và US06: tạo, xem, sửa dự án; tạo, sửa, xóa nhiệm vụ; giao người thực hiện và đặt hạn hoàn thành. Giao diện và API dùng dữ liệu PostgreSQL được lưu trên đĩa.
 
 ## Tiến độ và GitHub
 
@@ -70,13 +70,23 @@ Prefix `http://localhost:4000/api/v1`. Cookie `orbit_session` là HttpOnly, Same
 | Members | `GET /workspaces/:id/members`, `PATCH /workspaces/:id/members/:memberId`, `DELETE /workspaces/:id/members/:memberId` |
 | Invitations | `GET /workspaces/:id/invitations`, `POST /workspaces/:id/invitations`, `DELETE /workspaces/:id/invitations/:invitationId`, `POST /invitations/accept` |
 | Audit | `GET /workspaces/:id/audit` |
+| Projects | `GET/POST /workspaces/:id/projects`, `GET/PATCH /workspaces/:id/projects/:projectId` |
+| Tasks | `GET/POST /workspaces/:id/projects/:projectId/tasks`, `GET /workspaces/:id/my-tasks`, `GET/PATCH /workspaces/:id/tasks/:taskId`, `DELETE /workspaces/:id/tasks/:taskId?version=` |
 
-OpenAPI nằm trong `packages/contracts/openapi.yaml`; các kiểu frontend được sinh vào `api.generated.ts` bằng `pnpm api:types`. Các task API mẫu cũ đã được gỡ khỏi SP1; chức năng dự án/nhiệm vụ thuộc SP2.
+OpenAPI nằm trong `packages/contracts/openapi.yaml`; các kiểu frontend được sinh vào `api.generated.ts` bằng `pnpm api:types`. Các bảng dự án và nhiệm vụ dùng chung quy tắc: mọi truy vấn gắn với workspace, cập nhật kiểm tra `version`, audit và outbox ghi trong cùng transaction.
+
+## Dự án và nhiệm vụ
+
+- Mã dự án do server tạo theo tên, ví dụ `Website bán hàng` thành `WBH`; mã nhiệm vụ nối tiếp theo dự án, ví dụ `WBH-1`.
+- Người phụ trách dự án và người thực hiện nhiệm vụ phải là thành viên của workspace. Xóa thành viên sẽ bỏ giao các việc của người đó trong cùng transaction.
+- Ngày được lưu theo ngày lịch nên không lệch theo múi giờ. Dự án đã xong hoặc đã hủy không nhận nhiệm vụ mới.
+- Xóa nhiệm vụ là xóa mềm: dữ liệu giữ lại trong database nhưng không còn hiển thị.
+- SP2 chưa đổi được trạng thái nhiệm vụ; mọi nhiệm vụ mới ở trạng thái "Cần làm". Trạng thái, ưu tiên và nhiệm vụ con thuộc SP3.
 
 ## Quyền và tính nhất quán
 
 - Mọi API workspace xác thực phiên và đọc membership hiện tại từ database. Header `x-user-role`/`x-user-id` không tạo được quyền.
-- Owner/Admin quản trị workspace. Manager/Member/Viewer xem workspace và thành viên trong SP1. Quyền nhiệm vụ sẽ được bổ sung ở SP2.
+- Owner/Admin quản trị workspace. Manager/Member/Viewer xem workspace và thành viên trong SP1. Owner/Admin/Manager tạo và sửa dự án; Owner/Admin/Manager/Member tạo, sửa, xóa và giao nhiệm vụ; Viewer chỉ xem.
 - Owner không bị xóa/hạ quyền trong SP1. Admin không quản lý Owner/Admin. Không được tự sửa quyền hoặc tự xóa membership.
 - Lời mời có hạn 7 ngày, email phải khớp, mã chỉ dùng một lần và database chỉ lưu hash của mã.
 - Workspace update kiểm tra `version` trong điều kiện cập nhật; xung đột trả 409. Mutation khóa workspace, kiểm tra quyền và ghi audit/outbox trong cùng transaction.
